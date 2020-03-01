@@ -1,0 +1,177 @@
+---
+title: "HW: Week 3"
+author: "36-350 -- Statistical Computing"
+date: "Week 3 -- Spring 2020"
+output:
+  pdf_document:
+    toc: no
+  html_document:
+    toc: true
+    toc_float: true
+    theme: spacelab
+---
+
+Name: Edwin Baik
+
+Andrew ID: ebaik
+
+This HW is to be begun in class, but may be finished outside of class at any time prior to Friday, January 31<sup>th</sup> at 6:00 PM. You must submit **your own** lab as a knitted PDF file on Gradescope.
+
+
+
+```{r}
+trump.lines = readLines("http://www.stat.cmu.edu/~pfreeman/trump.txt")
+```
+
+
+
+## Question 1
+*(10 points)*
+
+Display the lines of text in `trump.lines` that contain both of the strings "America" *and* "great" (in any order, separated by any amount of text). Do so only using regexp literals.
+```{r}
+grep(".*(America.*great|great.*America).*",trump.lines,value=TRUE)
+```
+
+## Question 2
+*(10 points)*
+
+Retrieve (but don't display) the lines of text in `trump.lines` that contain "Trump". Then break the retrieved lines into individual words (`strsplit(input," ")` to split the character vector `input` into words separated by spaces), and merge those words into a single character vector (`unlist()`!). How many unique words are there? Display the top five most commonly occurring words and how often they occur (combine `sort()` and `table()`!)
+```{r}
+input = grep("Trump",trump.lines,value=TRUE)
+combination = unlist((strsplit(input,split=" +")))
+length(table(combination))
+tail(sort(table(combination)),5)
+```
+
+## Question 3
+*(10 points)*
+
+In Q25 of Lab 3, you coded a regex to match all patterns of the following form: any letter (1 or more), then a punctuation mark, then "ve" or "ll" or "t", then a space or a punctuation mark. You called it `my.pattern`. Use `my.pattern`, along with `regexpr()` and `regmatches()`, to extract and display all the occurrences of the pattern in `trump.lines`. Then repeat the exercise using `gregexpr()` instead of `regexpr`; note that here, you'll want to `unlist()` the output from `regmatches()`. Do you get the same vector of character strings? Why or why not?
+```{r}
+my.pattern = ("([a-zA-Z]+)([[:punct:]])(ve|ll|t)( |[[:punct:]])")
+reg.exp = regexpr(my.pattern,trump.lines)
+greg.exp = gregexpr(my.pattern,trump.lines)
+regmatches(trump.lines,reg.exp)
+unlist(regmatches(trump.lines,greg.exp))
+```
+```
+The vector of character strings between regexpr and gregexpr is different because
+regexpr stops once it finds the first matching substring for my.pattern, but 
+gregexpr continues going through the entire string and finds ALL possible matching
+substrings.
+```
+
+## Question 4
+*(10 points)*
+
+Come up with a strategy that splits punctuation marks or spaces, except that it keeps intact words like "I've" or "wasn't", that have a punctuation mark in the middle, in between two letters. (Or when the punctuation mark is at the beginning, as in "'em", or when there is a dollar sign at the beginning.) Apply your strategy to `trump.lines` as defined below such that you display only those words with punctuation marks and/or dollar signs. (Note that I end up with 102 [not necessarily unique, but total] words when I implement this strategy. Some include '\"', which we can easily remove in a subsequent post-processing step if we so choose. Note also that a dollar sign is *not* a punctuation mark; this will affect how you define your regex. Hint: `[[:alnum:]]` is a good thing to use here.)
+```{r}
+split.check = strsplit(trump.lines,split = "([[:punct:]] +)|( +)")
+grep("((\\$+[[:alnum:]])|([[:alnum:]][[:punct:]][[:alnum:]])|([[:punct:]][[:alnum:]]))",unlist(split.check),value=TRUE)
+```
+
+
+
+Below, we read in lines of data from the Advanced National Seismic System (ANSS), on earthquakes of magnitude 6+, between 2002 and 2017. (You don't have to do anything yet.) 
+```{r}
+anss.lines = readLines("http://www.stat.cmu.edu/~pfreeman/anss.htm")
+date.pattern = "[0-9]{4}/[0-9]{2}/[0-9]{2}"
+date.lines = grep(date.pattern,anss.lines,value=TRUE)
+```
+
+
+
+## Question 5
+*(10 points)*
+
+Check that all the lines in `date.lines` actually start with a date, of the form YYYY/MM/DD. rather than contain a date of this form somewhere in the middle of the text. (Hint: it might help to note that you can look for non-matches, as opposed to matches, by changing one of `grep()`'s logical arguments.)
+```{r}
+date.pattern = "[0-9]{4}/[0-9]{2}/[0-9]{2}"
+date.check = grep("^(data.pattern)",date.lines,value=TRUE)
+date.check
+```
+
+## Question 6
+*(10 points)*
+
+Which five days witnessed the most earthquakes, and how many were there, these days? Also, what happened on the day with the most earthquakes: can you find any references to this day in the news?
+```{r}
+tail(sort(table(substr(date.lines,1,10))),5)
+```
+```
+On 2011/03/11, there were massive earthquakes and tsunamis off the Japanese coast, 
+with Japan recording its most powerful earthquake and the 4th in the world.
+```
+
+## Question 7
+*(10 points)*
+
+Go back to the data in `date.lines`. Following steps similar to the ones you used in the lab to extract the latitude and longitude of earthquakes, extract the depth and magnitude of earthquakes. In the end, you should have one numeric vector of depths, and one numeric vector of magnitudes. Show the first three depths and the first three magnitudes. (Hint: if you use `regexpr()` and `regmatches()`, then the output from the latter will be a vector of strings. Look at this vector. The last four characters always represent the magnitudes. Use a combination of `substr()` and `as.numeric()` to create the numeric vector of magnitudes. Then use the fact that everything but the last four characters represents the depths. There are a myriad of ways to do this exercise, but this suggested way is the most concise.)
+```{r}
+date.time.rid.pattern = "-?[0-9]{1,3}\\.[0-9]{4}.*M"
+date.time.rid.exp = regexpr(date.time.rid.pattern, date.lines, useBytes = TRUE)
+date.time.rid.check = regmatches(date.lines, date.time.rid.exp)
+date.time.rid.check = substr(date.time.rid.check, nchar(date.time.rid.check) - 15, nchar(date.time.rid.check))
+
+depth.pattern = "[0-9]{1,3}\\.[0-9]{2}"
+depth.exp = regexpr(depth.pattern, date.time.rid.check, useBytes = TRUE)
+depth.check = regmatches(date.time.rid.check, depth.exp)
+as.numeric(head(depth.check,3))
+
+mag.pattern = "[0-9]\\.[0-9]{2} *M"
+mag.exp = regexpr(mag.pattern, date.time.rid.check, useBytes = TRUE)
+mag.check = regmatches(date.time.rid.check,mag.exp)
+mag.check = substr(mag.check,1,4)
+as.numeric(head(mag.check,3))
+```
+
+
+
+Here we read in text containing the fastest men's 100-meter sprint times. We retain only the lines that correspond to the sprint data, for times 9.99 seconds or better.
+```{r}
+sprint.lines = readLines("http://www.stat.cmu.edu/~pfreeman/men_100m.html")
+data.lines = grep(" +(9|10)\\.",sprint.lines)
+sprint.lines = sprint.lines[min(data.lines):max(data.lines)]
+```
+
+
+## Question 8
+*(10 points)*
+
+Extract the years in which the sprint times were recorded. Display them in table format. Do the same for the months. Be sure to extract the month of the sprint, not the birth month of the sprinter! (Hint: the month of the sprint is followed by a four-digit year; other instances of two digits in any given line are not. So you may have to extract more than you need, then apply `strsplit()`.)
+```{r}
+general.pattern = "[0-9]{2}\\.[0-9]{2}\\.[0-9]{4}"
+reg.exp = regexpr(general.pattern,sprint.lines,useBytes = TRUE)
+month.year.pair = regmatches(sprint.lines,reg.exp)
+table(substr(month.year.pair,7,10))
+table(substr(month.year.pair,4,5))
+```
+
+## Question 9
+*(10 points)*
+
+Extract the countries of origin (for the sprinters). Note that countries of origin are given as a capitalized three-letter abbreviation. Display the table of country origins. Display the proportion of the list that is accounted for by sprinters from the US and Jamaica.
+```{r}
+origin.pattern = "[A-Z]{3}"
+origin.exp = regexpr(origin.pattern,sprint.lines,useBytes = TRUE)
+origin = regmatches(sprint.lines,origin.exp)
+sort(table(origin))
+jamaica = sort(table(origin))[c(length(table(origin)))-1]
+america = sort(table(origin))[c(length(table(origin)))]
+(sum(jamaica) + sum(america)) / sum(table(origin))
+```
+
+## Question 10
+*(10 points)*
+
+We conclude with a web scraping exercise. I want you to go to <a href="https://arxiv.org/year/astro-ph/19">this web site</a>. On it, you see there is a set of 12 bold-faced four-digit numbers: this is the number of submitted astrophysics articles for each month of 2019. I want you to extract these numbers and place them into a single vector, with each vector element having a name: Jan for the first vector element, Feb for the second, etc. You would use `readLines()` to read in the page (pass the URL directly to the function!); this creates a vector of strings. You would then use `regexpr()` and `regmatches()` to extract the numbers (plus potentially some other stuff that you may have to pare off using `substr()`). If necessary, use "view source" to look at the html code for the web page itself to determine how best to extract the 12 numbers and nothing else. You don't want to create a table; you simply want to output the vector of four-digit numbers and add the appropriate names. (Hint: see the documentation for `Constants`. `month.abb` might be helpful here.)
+```{r}
+astro.lines = readLines("https://arxiv.org/year/astro-ph/19")
+astro.pattern = "<b>[0-9]{4}</b>"
+astro.exp = regexpr(astro.pattern, astro.lines, useBytes = TRUE)
+astro = regmatches(astro.lines, astro.exp)
+final.vec = substr(astro,4,7)
+names(final.vec) = month.abb
+final.vec
+```
