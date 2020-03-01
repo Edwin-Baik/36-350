@@ -1,0 +1,366 @@
+---
+title: "Lab: Week 2"
+author: "36-350 -- Statistical Computing"
+date: "Week 2 -- Spring 2020"
+output:
+  pdf_document:
+    toc: no
+  html_document:
+    toc: true
+    toc_float: true
+    theme: spacelab
+---
+
+Name: Edwin Baik 
+
+Andrew ID: ebaik
+
+This lab is to be begun in class, but may be finished outside of class at any time prior to Thursday, January 23<sup>rd</sup> at 6:00 PM. You must submit **your own** lab as a knitted PDF file on Gradescope.
+
+
+
+# Control-Flow Constructs
+
+## Question 1
+*(5 points)*
+
+*Notes 2A (3-4)*
+
+Write an `if-else` construct that prints the statement "a < A" if `"a" < "A"` is `TRUE` and "a >= A" otherwise.
+```{r}
+a = 4
+A = 5
+if (a < A) {
+  print("a < A")
+} else {
+  print("a >= A")
+}
+```
+
+## Question 2
+*(5 points)*
+
+*Notes 2A (6)*
+
+Repeat Q1, but using the `ifelse()` function.
+```{r}
+ifelse(a < A, print("a < A"), print("a >= A"))
+```
+
+## Question 3
+*(5 points)*
+
+*Notes 2A (3-4)*
+
+Write an `if` construct that, if there are matching elements of `u` and `v` (i.e., if `u[i] = v[i]` for any index i), prints the number of matching elements, and otherwise prints the string "There are no matching elements."
+```{r}
+set.seed(999)
+u = sample(100,100,replace=TRUE)
+v = sample(100,100,replace=TRUE)
+
+check = u == v
+
+if (sum(check) > 0) {
+  print(sum(check))
+} else {
+  print("There are no matching elements.")
+}
+```
+
+## Question 4
+*(5 points)*
+
+*Notes 2A (3-4)*
+
+Confirm the short-circuiting behavior of an `if-else` construct by (a) setting the variable `t` to the value 4, and (b) writing an `if-else` construct that first checks if `t` is greater than or equal to 4 and if so prints "t >= 4", then checks to see if `t` is greater than zero and if so prints "t > 0", and otherwise prints "t <= 0".
+```{r}
+
+t = 4
+
+if (t >= 4) {
+  print("t >= 4")
+} else if (t > 0) {
+  print("t > 0")
+} else {
+  print ("t <= 0")
+}
+```
+
+# Looping
+
+## Question 5
+*(5 points)*
+
+*Notes 2B (2-3)*
+
+Write a `for()` loop to add, elementwise, the vectors `x` and `y` defined below. Place each sum into the vector `x.plus.y` (which you can initialize using, e.g., `x.plus.y = rep(NA,4)`, where `NA` means "not available" or missing), then after the `for()` loop, display `x.plus.y`.
+```{r}
+x = c(1,2,3,4)
+y = c(-2,2,-3,3)
+
+x.plus.y = rep(NA,4)
+for(ii in 1:4) {
+  x.plus.y[ii] = x[ii] + y[ii]
+}
+
+x.plus.y
+```
+
+## Question 6
+*(5 points)*
+
+*Notes 2A (3-4) and 2B (2-3)*
+
+Write a `for()` loop to sum the natural logarithms of all elements of the vector `z`, defined below, that are positive. (Use `if` to check for positivity.) Display the result. Show that you can perform the same task without a `for()` loop, by utilizing logical-based vector subsetting and one call to `sum()`.
+```{r}
+z = c(-5,1,2,-4,3,4,-3,6)
+s = 0
+
+for (ii in 1:8) {
+  if (z[ii] > 0)
+    s = s + log(z[ii])
+}
+
+s 
+
+#Without for()
+hannah = which(z > 0)
+sum(log(z[hannah]))
+```
+
+## Question 7
+*(5 points)*
+
+*Notes 2B (5)*
+
+Write a `while()` loop that computes the sum of the first 100 positive integers. (Set the variable `s` equal to zero, then increment its value with each loop.) Then display the result. (It should be 5050.)
+```{r}
+s = 0
+count = 1
+while (count <= 100) {
+  s = s + count 
+  count = count + 1
+}
+
+s 
+```
+
+## Question 8
+*(5 points)*
+
+*Notes 2B (2-3)*
+
+Repeat Q7, but use a `for()` loop instead.
+```{r}
+s = 0
+for(ii in 1:100) {
+  s = s + ii
+}
+
+s
+```
+
+## Question 9
+*(5 points)*
+
+*Notes 2B (5,7)*
+
+Write a `while()` loop that samples one value from a standard normal (see `rnorm()`), then breaks when the value is greater than 4. Also include an incrementing variable that increments by one with each loop, and display its value when the loop is broken. (In other words: display how many loops occurred before a sampled value of > 4 was observed.) (Note: you can model this with a geometric distribution. The expected number of loops is 1/p = 1/(1-pnorm(4)).)
+```{r}
+count = 0
+continue = TRUE
+
+while (continue) {
+  if (rnorm(1) > 4){
+    print(count)
+    break
+  } else {
+    count = count + 1
+  }
+}
+
+```
+
+# Functions
+
+Be sure to refer to Notes 2C, Slide 15, for a link to Google's `R` coding style guide. (Which is now just another Hadley Wickham production.)
+
+As defined in Wikipedia, the logistic function is:
+$$
+f(x) = \frac{L}{1+e^{-k(x-x_o)}} \,,
+$$
+where $L$ is the curve's maximum value, $x_o$ is the $x$-value of the curve's midpoint (i.e., where $y = L/2$), and $k$ is a variable
+that controls how steep the curve is (i.e., how quickly it transitions from 0 to $L$).
+
+## Question 10
+*(10 points)*
+
+*Notes 2C (2,5,7,9)*
+
+Write a function `logistic()` that has arguments `x`, `L`, `x.o`, and `k`, and returns $f(x)$ as defined above. Display the return value for $x = x_o$ and ensure that it is $L/2$. You need not add any comments describing the function input/output. (Note: in `R`, $e^x$ is `exp(x)`.)
+```{r}
+logistic = function(x,L,x.o,k)
+{
+  L / (1 + exp(-k*(x-x.o)))
+}
+
+logistic(5,102,5,2)
+```
+
+## Question 11
+*(5 points)*
+
+*Notes 2C (2,5,7,9)*
+
+Modify your logistic function from Q10 so that `L`, `x.o`, and `k` are assigned reasonable default values. Ensure that you get a return value when you specify `x` alone.
+```{r}
+logistic = function(x,L = 50, x.o = 10, k = 2)
+{
+  L / (1 + exp(-k*(x-x.o)))
+}
+
+logistic(10)
+```
+
+## Question 12
+*(5 points)*
+
+*Notes 2C (6)*
+
+Do the following three lines of code give the same results? If not, why not?
+```{r}
+# Uncomment the following lines!
+logistic(x=1,L=1,x.o=-1,k=2)
+logistic(k=2,L=1,x=1,x.o=-1)
+logistic(2,1,1,-1)
+```
+```
+The three lines do not all give the same results because with the first two lines, 
+each variable is designated some value, but in the third line, the values are not 
+specified, so the values are equal to each element its indexed to, so it creates
+a different answer.
+```
+
+## Question 13
+*(5 points)*
+
+*Notes 2A (5) and 2C (7)*
+
+Modify your `logistic()` function again so that it checks to see if `x`, `L`, `x.o`, and `k` are of type "numeric". If any of these variables is not numeric, your function should return the value `NULL` (without quotes). A way to do this for a generic variable `x` would be via a line like
+```{r}
+# a line of code for type checking
+# if ( is.numeric(x) == FALSE ) return(NULL)
+```
+Using logical operators, you can combine all the checks into a single `if` statement. Verify that `NULL` is returned when at least one of the variables is not numeric.
+```{r}
+logistic = function(x,L,x.o,k)
+{
+  if (is.numeric(x) == FALSE || is.numeric(L) == FALSE || is.numeric(x.o) == FALSE || is.numeric(k) == FALSE) {
+    return(NULL)
+  } 
+}
+
+logistic(5,102,'a',7)
+```
+
+## Question 14
+*(5 points)*
+
+*Notes 2C (9)*
+
+It is often a good practice to record the values of arguments in function output, so that you can look later and determine what values were used when computing $f(x)$. Amend your logistic function so that it returns the values of $x$, $f(x)$, $L$, $x_o$, and $k$. Call the function once (with two values of $x$ specified, i.e., with $x$ as a two-element vector) and display your output.
+```{r}
+logistic = function(x, L, x.o, k)
+{
+  L / (1 + exp(-k*(x-x.o)))
+  return(list(x,L,x.o,k))
+}
+
+logistic(c(1,4),2,3,4)
+```
+
+# Functions: Silly User Tricks
+
+## Question 15
+*(5 points)*
+
+*Not Covered in Notes*
+
+Did you know that a function can return a function? Run the code below and explain what is happening here.
+```{r}
+h = function(x)
+{
+  return(function(y){y^x})
+}
+z = h(2)
+z(3)
+z = h(3)
+z(2)
+```
+```
+In this case, z is set to some index at first and that value represents the power.
+The next value that z is set to is its base, so it is the second value to the 
+power of the first value, thus 3^2 for the first answer and 2^3 for the second
+answer.
+```
+
+## Question 16
+*(5 points)*
+
+*Not Covered in Notes*
+
+Using the code above as a template, define a function `z()` that subtracts a previously set constant value from the input value. Demonstrate the use of `z()` with two different values for the constant.
+```{r}
+h = function(x)
+{
+  return(function(y){y-x})
+}
+
+z = h(2)
+z(3)
+```
+
+# Functions: Environments
+
+## Question 17
+*(5 points)*
+
+*Notes 2C (12-13)*
+
+What does the following code output? Explain how that output is generated.
+```{r}
+x = 1
+h = function() {
+  y = 2
+  i = function() {
+    z = 3
+    c(x, y, z)
+  }
+  i()
+}
+h()
+```
+```
+First, the function h is called with x = 1, and the value y is set to 2.
+Then at the end of the function h, the function i is called, setting
+z to 3, and then creating the vector "x,y,z", thus printing out
+1 2 3 for each value set by x,y,z respectively.
+```
+
+# Functions: Recursion
+
+## Question 18
+*(10 points)*
+
+*Notes 2C (14)*
+
+Code what is possibly the simplest example of recursive function use: the factorial function, i.e., $x! = x \times (x-1) \times \cdots \times 1$, for positive whole number $x$. Note that the name `factorial()` is already used for a function in `R`'s base package, so use `my_factorial()` instead. Comments are not necessary, and note that your function body only need be two lines long. Compute 5!.
+```{r}
+my_factorial = function(x)
+{
+  if (x <= 1) { return(1) }
+  else { return (x * my_factorial(x-1)) }
+}
+
+my_factorial(5)
+```
